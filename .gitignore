@@ -1,0 +1,7 @@
+.classpath
+.gradle/**
+.settings/**
+bin/**
+build/**
+doc/kaggle/**
+data/**
