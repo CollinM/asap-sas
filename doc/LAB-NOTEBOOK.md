@@ -29,10 +29,10 @@ I then created a Spark pipeline that generates 4,000 TF-IDF features and trains 
 Each run generated three files in its output directory:
 - matrix.csv - confusion matrix
 - metrics.csv - precision, recall, and F1 score
-- performance.csv - (`ID`, `Score 1`, predicted score) triples. (with an admittedly bad filename)
+- performance.csv - `(ID, Score 1, predicted score)` triples. (with an admittedly bad filename)
 
 | Essay Set | Precision | Recall | F1     | Quadratic Weighted Kappa |
-| --------- | --------- | ------ | ------ | ------------------------ |
+| --------- | --------: | -----: | -----: | -----------------------: |
 | 1         | 63.01%    | 55.14% | 58.81% | 68.76%                   |
 | 2         | 55.08%    | 50.18% | 52.52% | 46.90%                   |
 | 3         | 51.46%    | 52.83% | 52.13% |  6.10%                   |
@@ -49,7 +49,7 @@ As I suspected, the typical measure of precision, recall, and F1 have little to 
 
 The TF-IDF random forest pipeline seems to do best (surprisingly well, actually) on sets 1 and 9, worst on set 3, and posts middling performance on the remainder (with an average of ~47%). Taking a look at the confusion matrices for essay sets 1 and 9, it seems to me that the best performing essay sets must contain answers with "high value" words that are highly predictive of the answer being rated high or low. Conversely, the extremely poor performance of essay set 3 was probably because it predicted nearly everything as a 1 when only ~1/2 of the data was actually scored 1 (the remainder being split between 0 and 2). TF-IDF is clearly not a very good feature set for essay set 3. Taking a look at the text of the records quickly makes it evident that the content of the answers is highly regular with very consistent language throughout. This property makes it difficult for TF-IDF to generate any "interesting" values for words.
 
-Possible Next Steps:
+**Possible Next Steps**:
 - Environment
   - Move all feature engineering, and maybe model training and testing, to Pythont to make it easier to interact with and interrogate the data.
 - Preprocesing
