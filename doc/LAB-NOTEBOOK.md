@@ -1,6 +1,6 @@
 # Lab Notebook
 
-(Kaggle Competition page)[https://www.kaggle.com/c/asap-sas]
+[Kaggle Competition page](https://www.kaggle.com/c/asap-sas)
 
 ## Data Investigation
 
@@ -16,7 +16,7 @@ Other miscellaneous observations:
 
 ### Preprocessing the data
 
-Using the observations above, I made a quick and dirty (Python script)[../src/main/py/preprocess.py] to clean and normalize the text of the answers. Specifically,
+Using the observations above, I made a quick and dirty [Python script](../src/main/py/preprocess.py) to clean and normalize the text of the answers. Specifically,
 - Strip all punctuation
 - Normalize runs of whitespace to a single space
 - Make all characters lowercase
@@ -24,7 +24,7 @@ After the above steps, 10 output files are generated, one containing each essay 
 
 ### Random Forest with TF-IDF
 
-I then created a Spark pipeline that generates 4,000 TF-IDF features and trains and tests a random forest classifier (200 trees, max depth of 20 per tree). I iteratively ran this class with each of the 10 separated essay sets and generated (10 sets of results)[../output/baseline]. The following command was used to launch each pipeline: `spark-submit --class collinm.asap.BaselineTfIdf --master local[7] build\libs\asap-0-fat.jar data\processed\train-<ESSAY-SET>.tsv output/baseline/<ESSAY-SET> 200 20`
+I then created a Spark pipeline that generates 4,000 TF-IDF features and trains and tests a random forest classifier (200 trees, max depth of 20 per tree). I iteratively ran this class with each of the 10 separated essay sets and generated [10 sets of results](../output/baseline). The following command was used to launch each pipeline: `spark-submit --class collinm.asap.BaselineTfIdf --master local[7] build\libs\asap-0-fat.jar data\processed\train-<ESSAY-SET>.tsv output/baseline/<ESSAY-SET> 200 20`
 
 Each run generated three files in its output directory:
 - matrix.csv - confusion matrix
