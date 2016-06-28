@@ -1,7 +1,20 @@
+# Java
 .classpath
 .gradle/**
 .settings/**
 bin/**
+
+# Python
+**.pkl
+**.pyc
+.idea/**
 build/**
+dist/**
+venv/**
+ASAP.egg-info/**
+
+# Data, other
 doc/kaggle/**
-data/**
+data/train*
+data/test*
+data/processed/**

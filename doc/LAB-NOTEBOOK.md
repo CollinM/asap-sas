@@ -51,7 +51,7 @@ The TF-IDF random forest pipeline seems to do best (surprisingly well, actually)
 
 **Possible Next Steps**:
 - Environment
-  - Move all feature engineering, and maybe model training and testing, to Pythont to make it easier to interact with and interrogate the data.
+  - Move all feature engineering, and maybe model training and testing, to Python to make it easier to interact with and interrogate the data.
 - Preprocesing
   - Double the available data by using both scores. However, this brings up a philosophical and machine learning conundrum in the way that the problem is poised. Score 1 is the actual score awarded to the answer and thus the target label, Score 2 is the score given to measure/test the reliability of Score 1. By creating duplicate instances (by feature representation) that have the same score, we're not *really* adding any new signal to the system. We could argue that we're reinforcing the signal, and that could be borne out in the experiment's results. But, what happens when the duplicate instances have different scores? Now it would seem that we're adding noise to the system in the form of philosophically incorrect target labels. But, again, it could be argued that if the reliability score disagrees with the actual score, then the actual score is not as accurate as we take it to be. The aforementioned noise could actually be a signal that represents our lack of confidence in the actual score. In short, it's not at all clear that it would be appropriate to use Score 2 as stand-in target label, but it would make for an interesting experiment.
   - Develop heuristic to remove outlier answers that are clearly mistakenly truncated, yet have a non-zero score.
@@ -63,3 +63,32 @@ The TF-IDF random forest pipeline seems to do best (surprisingly well, actually)
   - Amount of punctuation
   - Word n-grams...
   - Essay set-specific features where appropriate (e.g., "key elements" from the rubric for essay 6)
+
+## Experiment 1 - Baseline Redux
+
+Uses the same preprocessed data as "Experiment 1 - Baseline".
+
+### Random Forest with TF-IDF
+
+I ported my Spark pipeline from the previous experiment into Python and re-ran the experiment with different (better informed) parameters. The Python pipeline used 2,000 TF-IDF features (ranked by highest TF-IDF scores in the training data) as input to a random forest of 200 trees each with a maximum depth of 30 nodes. This pipeline was run independently for each of the 10 essay sets. Each pipeline is saved after it is trained to allow for easier replication of the experimental results. The experiment is encoded in [`experiments/01-baseline.py`](../experiments/01-baseline.py).
+
+Each pipeline generates a separate result in the [output folder](../output/py-baseline) with the following files:
+- `cm.csv` - confusion matrix
+- `pipeline.pkl` - pickled pipeline
+- `qwk.txt` - contains quadratic weighted kappa metric
+
+| Essay Set | Quadratic Weighted Kappa |
+| --------- | -----------------------: |
+| 1         | 76.86%                   |
+| 2         | 52.24%                   |
+| 3         | 13.29%                   |
+| 4         | 61.20%                   |
+| 5         | 45.67%                   |
+| 6         | 63.39%                   |
+| 7         | 52.03%                   |
+| 8         | 48.86%                   |
+| 9         | 63.31%                   |
+| 10        | 69.76%                   |
+| Average   | 54.66%                   |
+
+This pipeline, though being very similar to the last one, performed quite a bit better: +7% in quadratic weighted kappa. Every essay set performed better than the prior experiment, except for set 9 which performed only slightly worse (-1%). Without digging into the data too much, I'd attribute these incraeses to the greater generality provided by a reduction in TF-IDF features and trees that consider a greater number of features (square root of the total features, instead of log2).
