@@ -10,6 +10,13 @@ def write_qwk(actuals, predxns, filepath):
     return qwk
 
 
+def write_results(result_triples, filepath):
+    """Write ID-gold-prediction result triples to `filepath`."""
+    with open(filepath, 'w') as f:
+        for t in result_triples:
+            f.write(','.join(t) + '\n')
+
+
 class ConfusionMatrix(object):
     """First index is actual, second is predicted."""
 

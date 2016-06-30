@@ -5,20 +5,20 @@ from asap.core import Base, SparseVector
 
 class Tokenizer(Base):
 
-    def __init__(self, sep=' '):
-        super().__init__()
+    def __init__(self, sep=' ', key='tokens'):
+        super().__init__(key)
         self._sep = sep
 
     def process(self, instance):
         tokens = instance.text.split(self._sep)
-        instance.add_feature('tokens', tokens)
+        instance.add_feature(self.key, tokens)
         return instance
 
 
 class TFIDF(Base):
 
-    def __init__(self, topk=None, idf=None, token_map=None):
-        super().__init__()
+    def __init__(self, topk=None, idf=None, token_map=None, key='tfidf'):
+        super().__init__(key)
         self._trainable = True
 
         self._topk = topk
@@ -31,7 +31,7 @@ class TFIDF(Base):
         for tok in term_counts.elements():
             if tok in self._token_index_map:
                 vector[self._token_index_map[tok]] = term_counts[tok] * self._idf[tok]
-        instance.add_feature('tfidf', vector)
+        instance.add_feature(self.key, vector)
 
         return instance
 
@@ -72,3 +72,66 @@ class TFIDF(Base):
 
         self._idf = idf
         self._token_index_map = index_map
+
+
+class UniqueWordCount(Base):
+    """Count the unique words in an instance's text."""
+
+    def __init__(self, key="unique-word-count"):
+        super().__init__(key)
+
+    def process(self, instance):
+        instance.add_feature(self.key, len(set(instance.get_feature("tokens").to_list())))
+        return instance
+
+
+class WordCount(Base):
+    """Coutn all of the words (tokens) in an instance's text."""
+
+    def __init__(self, key="word-count"):
+        super().__init__(key)
+
+    def process(self, instance):
+        instance.add_feature(self.key, len(instance.get_feature("tokens")))
+        return instance
+
+
+class CharacterCount(Base):
+    """Count all of the characters in an instance's text."""
+
+    def __init__(self, key="char-count"):
+        super().__init__(key)
+
+    def process(self, instance):
+        instance.add_feature(self.key, len(instance.text))
+        return instance
+
+
+class NonWhitespaceCharacterCount(Base):
+    """Count all of the non-whitespace characters in an instance's text."""
+
+    def __init__(self, key="!white-char-count"):
+        super().__init__(key)
+
+    def process(self, instance):
+        instance.add_feature(self.key, len(instance.text.replace(' ', '')))
+        return instance
+
+
+class ContainsWords(Base):
+    """Create word presence vector based on a list of words."""
+
+    def __init__(self, word_list_path, key='word-presence'):
+        super().__init__(key)
+        self._words = {}
+        with open(word_list_path) as f:
+            for i, line in enumerate(f.readlines()):
+                self._words[line.strip().lower()] = i
+
+    def process(self, instance):
+        vec = SparseVector(len(self._words))
+        for tok in instance.get_feature('tokens'):
+            if tok in self._words:
+                vec[self._words[tok]] = 1
+        instance.add_feature(self.key, vec)
+        return instance

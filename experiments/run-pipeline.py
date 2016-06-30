@@ -1,8 +1,7 @@
 import argparse
-import os.path
 
 from asap.core import load_instances, split_instances, Pipeline
-from asap.metrics import ConfusionMatrix, write_qwk
+from asap.core.runners import PipelineRunner
 
 
 def parse_args():
@@ -25,24 +24,7 @@ if __name__ == "__main__":
     print("Loading pipeline...")
     pipe = Pipeline.load(args.pipeline_path)
 
-    print("Running pipeline...")
-    evaled = pipe.run(test)
-
-    print("Gather metrics...")
-    cm = ConfusionMatrix(range(4))
-    actuals = []
-    predxns = []
-    for inst in evaled:
-        actuals.append(str(inst.get_feature("score1")[0]))
-        predxns.append(str(inst.get_feature("prediction")[0]))
-        cm.increment(actuals[-1], predxns[-1])
-
-    cm_path = os.path.join(args.output_path, 'cm.csv')
-    print("Writing confusion matrix to " + cm_path)
-    cm.write_csv(cm_path)
-
-    qwk_path = os.path.join(args.output_path, 'qwk.txt')
-    print("Writing quadratic weighted kappa to " + qwk_path)
-    write_qwk(actuals, predxns, qwk_path)
+    runner = PipelineRunner(pipe, test, 'score1', 'prediction', output_path=args.output_path, evaluate=True)
+    results = runner.run()
 
     print("Done")

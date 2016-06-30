@@ -3,6 +3,7 @@ import random
 from math import floor
 import pickle
 
+
 class Instance(object):
 
     def __init__(self, identifier, text):
@@ -41,25 +42,30 @@ class Instance(object):
 
 class Base(object):
 
-    def __init__(self):
+    def __init__(self, key):
         self._trainable = False
+        assert isinstance(key, str)
+        self._key = key
 
     @property
     def is_trainable(self):
         return self._trainable
 
-    def process(self, instances):
+    @property
+    def key(self):
+        return self._key
+
+    def process(self, instance):
         raise NotImplementedError("Run is not implemented!")
 
 
 class Model(Base):
 
-    def __init__(self, target, features, prdxn_key="prediction"):
-        super().__init__()
+    def __init__(self, target, features, key="prediction"):
+        super().__init__(key)
         self._trainable = True
         self._target = target
         self._features = features
-        self._prdxn_key = prdxn_key
 
     def collect_features(self, instance):
         x = []
