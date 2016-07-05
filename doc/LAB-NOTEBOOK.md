@@ -92,3 +92,62 @@ Each pipeline generates a separate result in the [output folder](../output/py-ba
 | Average   | 54.66%                   |
 
 This pipeline, though being very similar to the last one, performed quite a bit better: +7% in quadratic weighted kappa. Every essay set performed better than the prior experiment, except for set 9 which performed only slightly worse (-1%). Without digging into the data too much, I'd attribute these incraeses to the greater generality provided by a reduction in TF-IDF features and trees that consider a greater number of features (square root of the total features, instead of log2).
+
+## Experiment 2 - Question/Source/Prompt Vocabulary
+
+Uses the same preprocessed data as "Experiment 1 - Baseline".
+
+### Random Forest with bag-of-words vector
+
+I read through each essay questions source material, if present, and question prompt, and recorded words or similar conjugates that looked to be important to the answer. Each [list of keywords](../data/keywords) is 46-70 words long and includes words that I judged to be relevant to an answer, good or bad. Admittedly, by doing this by hand, I'm imposing my own bias on this feature, but hopefully it'll be a positive bias... Each list of keywords is only used with its associated essay set. It creates a N-length (N = number of keywords) vector of 1's and 0's, where a 1 represents the word's presence in the candidate answer and a 0 represents its absence. This vector represents the only features used for learning.
+
+This pipeline can be run with a command like `python experiments\02-word-presence.py data\processed output\exp-02\rf-200t-100d 200 100`
+
+Each pipeline generates a separate result in the [output folder](../output/exp-02) with the following files:
+- `cm.csv` - confusion matrix
+- `pipe.pkl` - pickled pipeline
+- `qwk.txt` - contains quadratic weighted kappa metric
+- `results.csv` - for each item in the test set, records the ID of the record, the gold standard score (score1), and the raw prediction
+
+The following table lists the quadratic weighted kappa scores for each essay set for each set of parameters. Model parameters are recorded like "N trees (t), M max depth (d)":
+| Essay Set | 150t, 100d | 200t, 100d | 200t, 10d | 100t, 25d |
+| --------- | ---------: | ---------: | --------: | --------: |
+| 1         | 55.90%     | 57.25%     | 58.80%    | 58.13%    |
+| 2         | 38.65%     | 37.66%     | 38.99%    | 34.72%    |
+| 3         | 14.74%     | 13.52%     | 03.91%    | 13.87%    |
+| 4         | 41.88%     | 40.93%     | 40.12%    | 42.07%    |
+| 5         | 58.37%     | 60.44%     | 58.97%    | 49.99%    |
+| 6         | 80.50%     | 80.41%     | 81.60%    | 79.27%    |
+| 7         | 38.19%     | 38.19%     | 42.11%    | 34.00%    |
+| 8         | 30.73%     | 30.65%     | 39.30%    | 32.38%    |
+| 9         | 55.37%     | 57.82%     | 56.81%    | 56.11%    |
+| 10        | 56.67%     | 56.67%     | 53.58%    | 58.16%    |
+| Avg       | 47.10%     | 47.35%     | 47.42%    | 45.87%    |
+
+Across the board, these hand-picked features perform worse than TF-IDF by ~7%. However, I suspect that misspellings in the candidate answer set are contributing to the poorer performance. Though this same complication might also affect TF-IDF, common misspellings have a chance of actually being represented by TF-IDF; whereas a bag-of-words vector will never capture misspellings unless they're explicitly accounted for.
+
+A variety of model parameters did not make much of a difference, on average, as long as the values were kept in a reasonable range. Specific essay sets were affected by model parameters, suggesting that some models are overfitting their essay set and poorly generalizing to the test data.
+
+The only two essay sets whose performance improved over the baseline sets 5 and 6, the "protein synthesis" and "cell membrane" questions, respectively. The reason for this improvement is most likely that these questions are the most sensitive to pure vocabulary features. The scoring rubric is entirely based around how many of the "key elements" the candidate answer covers. This abstracted presence-absence criteria is an excellent match for our bag-of-words features, in this case. We could probably still add or subtract some words from each list to eke out some additional signal and performance.
+
+### Random Forest with bag-of-words vector and misc counting features
+
+This pipeline leverages a random forest against the same features as the experiment above with the addition of four counting features: word count, unique word count, character count, and non-whitespace character count. All of these counting features are an attempt to model the signal that we get from the length of the candidate answer. Shorter answers are, on average, worse than longer answers; however, this is not always true. Occassionally, a student writes an answer that qualifies for the highest score in an amount of words that would otherwise incur the lowest score. Admittedly, these features are far from perfect, but they may realize some value when paired with the bag-of-words features.
+
+This pipeline can be run with a command like `python experiments\02.1-word-presence-and-counts.py data\processed output\exp-02.1\rf-200t-100d 200 100`
+
+| Essay Set | 200t, 100d |
+| --------- | ---------: |
+| 1         | 59.95%     |
+| 2         | 35.11%     |
+| 3         | 21.82%     |
+| 4         | 53.29%     |
+| 5         | 55.81%     |
+| 6         | 81.17%     |
+| 7         | 37.48%     |
+| 8         | 39.60%     |
+| 9         | 60.25%     |
+| 10        | 64.21%     |
+| Avg       | 50.87%     |
+
+On the whole, performance increased ~3%. The performance of most of the essay sets was essentially flat or a little negative, except: 3, 4, 8, 9, 10. These sets gained 3-6%. Further investigation of the training data will be required to understand why this subset responded well while the others did not respond at all or responded poorly.

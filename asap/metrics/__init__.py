@@ -10,6 +10,14 @@ def write_qwk(actuals, predxns, filepath):
     return qwk
 
 
+def write_qwk_markdown_table(qwk_scores, filepath):
+    """Write quadratic weighted kappa scores as a markdown table."""
+    with open(filepath, 'w') as f:
+        for score in qwk_scores:
+            s = str(score)
+            f.write("| " + s[2:4] + "." + s[4:6] + "% |\n")
+
+
 def write_results(result_triples, filepath):
     """Write ID-gold-prediction result triples to `filepath`."""
     with open(filepath, 'w') as f:

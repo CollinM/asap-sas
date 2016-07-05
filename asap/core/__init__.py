@@ -2,6 +2,7 @@ from collections import defaultdict
 import random
 from math import floor
 import pickle
+import os
 
 
 class Instance(object):
@@ -158,6 +159,7 @@ class SparseVector(object):
 
 
 def load_instances(filename):
+    """Load a list of Instances from 'filename'"""
     instances = []
     with open(filename) as f:
         for line in [l.strip() for l in f.readlines()]:
@@ -170,8 +172,20 @@ def load_instances(filename):
 
 
 def split_instances(instances, portion, seed=None):
+    """Split a list of Instances into training and testing sets, respectively."""
     random.seed(seed)
     insts = instances[:]
     random.shuffle(insts)
     split_index = floor(len(insts) * portion) + 1
     return insts[:split_index], insts[split_index:]
+
+
+def gather_input_files(input_path):
+    """Return list of input tuples: (input number, full filename)"""
+    inputs = []
+    for fname in os.listdir(input_path):
+        full_name = os.path.join(input_path, fname)
+        dot_idx = fname.find('.')
+        num = fname[dot_idx - 2:dot_idx]
+        inputs.append((num, full_name))
+    return inputs

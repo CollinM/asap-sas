@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from asap.core import load_instances, split_instances, Pipeline
+from asap.core import load_instances, split_instances, gather_input_files, Pipeline
 from asap.core.features import Tokenizer, TFIDF
 from asap.core.ml import RandomForest
 from asap.core.runners import PipelineRunner
@@ -16,17 +16,19 @@ def parse_args():
     return ap.parse_args()
 
 
+def make_pipeline(top_k, trees, depth):
+    pipe = Pipeline()
+    pipe.add_phase(Tokenizer())
+    pipe.add_phase(TFIDF(topk=top_k))
+    pipe.add_phase(RandomForest(num_trees=trees, max_depth=depth, target="score1", features=["tfidf"]))
+    return pipe
+
 if __name__ == "__main__":
 
     args = parse_args()
 
     # Gathering inputs
-    inputs = []
-    for fname in os.listdir(args.input_path):
-        full_name = os.path.join(args.input_path, fname)
-        dot_idx = fname.find('.')
-        num = fname[dot_idx-2:dot_idx]
-        inputs.append((num, full_name))
+    inputs = gather_input_files(args.input_path)
 
     qwk_scores = {}
     for input_item in inputs:
@@ -44,10 +46,7 @@ if __name__ == "__main__":
 
         print("Creating pipeline...", end='')
         # Create pipeline with tokenizer and TF-IDF
-        pipe = Pipeline()
-        pipe.add_phase(Tokenizer())
-        pipe.add_phase(TFIDF(topk=2000))
-        pipe.add_phase(RandomForest(num_trees=args.num_trees, max_depth=args.max_depth, target="score1", features=["tfidf"]))
+        pipe = make_pipeline(2000, args.num_trees, args.max_depth)
         print("Done")
 
         runner = PipelineRunner(pipe, test, 'score1', 'prediction', train, output_dir, evaluate=True, save=True)
