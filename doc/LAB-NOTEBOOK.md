@@ -109,21 +109,21 @@ Each pipeline generates a separate result in the [output folder](../output/exp-0
 - `qwk.txt` - contains quadratic weighted kappa metric
 - `results.csv` - for each item in the test set, records the ID of the record, the gold standard score (score1), and the raw prediction
 
-The following table lists the quadratic weighted kappa scores for each essay set for each set of parameters. Model parameters are recorded like "N trees (t), M max depth (d)":
+The following table lists the quadratic weighted kappa scores for each essay set for each set of parameters. Model parameters are recorded like "N trees (t), M max depth (d)" (bolded numbers represent the best performance for each essay set):
 
 | Essay Set | 150t, 100d | 200t, 100d | 200t, 10d | 100t, 25d |
 | --------- | ---------: | ---------: | --------: | --------: |
-| 1         | 55.90%     | 57.25%     | 58.80%    | 58.13%    |
-| 2         | 38.65%     | 37.66%     | 38.99%    | 34.72%    |
-| 3         | 14.74%     | 13.52%     | 03.91%    | 13.87%    |
-| 4         | 41.88%     | 40.93%     | 40.12%    | 42.07%    |
-| 5         | 58.37%     | 60.44%     | 58.97%    | 49.99%    |
-| 6         | 80.50%     | 80.41%     | 81.60%    | 79.27%    |
-| 7         | 38.19%     | 38.19%     | 42.11%    | 34.00%    |
-| 8         | 30.73%     | 30.65%     | 39.30%    | 32.38%    |
-| 9         | 55.37%     | 57.82%     | 56.81%    | 56.11%    |
-| 10        | 56.67%     | 56.67%     | 53.58%    | 58.16%    |
-| Avg       | 47.10%     | 47.35%     | 47.42%    | 45.87%    |
+| 1         | 55.90%     | 57.25%     | **58.80%**| 58.13%    |
+| 2         | 38.65%     | 37.66%     | **38.99%**| 34.72%    |
+| 3         | **14.74%** | 13.52%     | 03.91%    | 13.87%    |
+| 4         | 41.88%     | 40.93%     | 40.12%    | **42.07%**|
+| 5         | 58.37%     | **60.44%** | 58.97%    | 49.99%    |
+| 6         | 80.50%     | 80.41%     | **81.60%**| 79.27%    |
+| 7         | 38.19%     | 38.19%     | **42.11%**| 34.00%    |
+| 8         | 30.73%     | 30.65%     | **39.30%**| 32.38%    |
+| 9         | 55.37%     | **57.82%** | 56.81%    | 56.11%    |
+| 10        | 56.67%     | 56.67%     | 53.58%    | **58.16%**|
+| Avg       | 47.10%     | 47.35%     | **47.42%**| 45.87%    |
 
 Across the board, these hand-picked features perform worse than TF-IDF by ~7%. However, I suspect that misspellings in the candidate answer set are contributing to the poorer performance. Though this same complication might also affect TF-IDF, common misspellings have a chance of actually being represented by TF-IDF; whereas a bag-of-words vector will never capture misspellings unless they're explicitly accounted for.
 
