@@ -110,6 +110,7 @@ Each pipeline generates a separate result in the [output folder](../output/exp-0
 - `results.csv` - for each item in the test set, records the ID of the record, the gold standard score (score1), and the raw prediction
 
 The following table lists the quadratic weighted kappa scores for each essay set for each set of parameters. Model parameters are recorded like "N trees (t), M max depth (d)":
+
 | Essay Set | 150t, 100d | 200t, 100d | 200t, 10d | 100t, 25d |
 | --------- | ---------: | ---------: | --------: | --------: |
 | 1         | 55.90%     | 57.25%     | 58.80%    | 58.13%    |
