@@ -18,8 +18,7 @@ class Tokenizer(Base):
 class TFIDF(Base):
 
     def __init__(self, topk=None, idf=None, token_map=None, key='tfidf'):
-        super().__init__(key)
-        self._trainable = True
+        super().__init__(key, True)
 
         self._topk = topk
         self._idf = idf
@@ -72,6 +71,43 @@ class TFIDF(Base):
 
         self._idf = idf
         self._token_index_map = index_map
+
+
+class BagOfWords(Base):
+
+    def __init__(self, min_occur=1, key='bow'):
+        super().__init__(key, True)
+
+        assert isinstance(min_occur, int)
+        self._min_occur = min_occur
+        self._bow_lookup = None
+
+    def process(self, instance):
+        vector = SparseVector(len(self._bow_lookup))
+        for token in instance.get_feature('tokens'):
+            if token in self._bow_lookup:
+                vector[self._bow_lookup[token]] = 1
+
+        instance.add_feature(self.key, vector)
+
+        return instance
+
+    def train(self, instances):
+        assert isinstance(instances, list)
+
+        # Count token occurrences
+        counter = Counter()
+        for inst in instances:
+            counter.update(inst.get_feature('tokens'))
+
+        self._bow_lookup = {}
+        n = 0
+        for token, count in counter.most_common():
+            if count >= self._min_occur:
+                self._bow_lookup[token] = n
+                n += 1
+            else:
+                break
 
 
 class UniqueWordCount(Base):

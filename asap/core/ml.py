@@ -7,7 +7,6 @@ class RandomForest(Model):
 
     def __init__(self, model=None, num_trees=100, max_depth=None, threads=1, **kwargs):
         super().__init__(**kwargs)
-        self._trainable = True
         self._num_trees = num_trees
         self._max_depth = max_depth
         self._threads = threads

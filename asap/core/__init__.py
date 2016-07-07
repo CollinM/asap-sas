@@ -43,8 +43,9 @@ class Instance(object):
 
 class Base(object):
 
-    def __init__(self, key):
-        self._trainable = False
+    def __init__(self, key, trainable=False):
+        assert isinstance(trainable, bool)
+        self._trainable = trainable
         assert isinstance(key, str)
         self._key = key
 
@@ -63,8 +64,7 @@ class Base(object):
 class Model(Base):
 
     def __init__(self, target, features, key="prediction"):
-        super().__init__(key)
-        self._trainable = True
+        super().__init__(key, True)
         self._target = target
         self._features = features
 
