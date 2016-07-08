@@ -1,6 +1,5 @@
 import os
 from asap.metrics import ConfusionMatrix, write_qwk, write_results
-from asap.core import gather_input_files, load_instances, split_instances
 
 
 class PipelineRunner(object):
@@ -69,7 +68,5 @@ class PipelineRunner(object):
             write_results(triples, results_path)
 
             print("Done")
-
-
 
         return results

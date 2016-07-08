@@ -1,6 +1,6 @@
 import argparse
 
-from asap.core import load_instances, split_instances, Pipeline
+from asap.core import load_test_instances, Pipeline
 from asap.core.runners import PipelineRunner
 
 
@@ -15,14 +15,14 @@ if __name__ == "__main__":
 
     args = parse_args()
 
-    print("Loading data...")
+    print("Loading data...", end='')
     # Load instance data
-    data = load_instances(args.input_path)
-    # split into train and test
-    train, test = split_instances(data, 0.8, 42)
+    test = load_test_instances(args.input_path)
+    print("Done")
 
-    print("Loading pipeline...")
+    print("Loading pipeline...", end='')
     pipe = Pipeline.load(args.pipeline_path)
+    print("Done")
 
     runner = PipelineRunner(pipe, test, 'score1', 'prediction', output_path=args.output_path, evaluate=True)
     results = runner.run()

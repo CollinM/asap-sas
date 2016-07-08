@@ -15,6 +15,6 @@ ASAP.egg-info/**
 
 # Data, other
 doc/kaggle/**
+data/split/*
 data/train*
-data/test*
-data/processed/**
+data/public*

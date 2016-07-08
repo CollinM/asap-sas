@@ -158,8 +158,8 @@ class SparseVector(object):
         return list(self.__iter__())
 
 
-def load_instances(filename):
-    """Load a list of Instances from 'filename'"""
+def load_train_instances(filename):
+    """Load a list of training Instances from 'filename'"""
     instances = []
     with open(filename) as f:
         for line in [l.strip() for l in f.readlines()]:
@@ -167,6 +167,18 @@ def load_instances(filename):
             inst = Instance(ident, text)
             inst.add_feature('score1', int(score1))
             inst.add_feature('score2', int(score2))
+            instances.append(inst)
+    return instances
+
+
+def load_test_instances(filename):
+    """Load a list of testing Instances from 'filename'"""
+    instances = []
+    with open(filename) as f:
+        for line in [l.strip() for l in f.readlines()]:
+            ident, score1, text = line.split("\t")
+            inst = Instance(ident, text)
+            inst.add_feature('score1', int(score1))
             instances.append(inst)
     return instances
 
@@ -181,11 +193,10 @@ def split_instances(instances, portion, seed=None):
 
 
 def gather_input_files(input_path):
-    """Return list of input tuples: (input number, full filename)"""
+    """Return list of input tuples: (input number, train filename, test filename)"""
     inputs = []
-    for fname in os.listdir(input_path):
-        full_name = os.path.join(input_path, fname)
-        dot_idx = fname.find('.')
-        num = fname[dot_idx - 2:dot_idx]
-        inputs.append((num, full_name))
+    for num_id in [str(i).zfill(2) for i in range(1, 11)]:
+        train_path = os.path.join(input_path, num_id + "-train.tsv")
+        test_path = os.path.join(input_path, num_id + "-test.tsv")
+        inputs.append((num_id, train_path, test_path))
     return inputs
