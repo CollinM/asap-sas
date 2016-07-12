@@ -25,7 +25,7 @@ class PipelineRunner(object):
     def run(self):
         # Train pipeline
         if self._train is not None:
-            print("Training pipeline...", end='')
+            print("Training pipeline...")
             self._pipe.train(self._train)
             print("Done")
 

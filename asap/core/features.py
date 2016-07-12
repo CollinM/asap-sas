@@ -1,6 +1,7 @@
 from collections import defaultdict, Counter
 from math import log10
-from asap.core import Base, SparseVector
+from asap.core import Base, SparseVector, DenseVector
+import numpy as np
 
 
 class Tokenizer(Base):
@@ -108,6 +109,58 @@ class BagOfWords(Base):
                 n += 1
             else:
                 break
+
+
+class NN_BagOfWords(Base):
+
+    def __init__(self, min_occur=1, chunk_len=10, step_size=5, key='nn-bow'):
+        super().__init__(key, True)
+
+        assert isinstance(min_occur, int)
+        self._min_occur = min_occur
+        self._chunk_len = chunk_len
+        self._step_size = step_size
+        self._bow_lookup = None
+        self._bow_size = 0
+
+    def process(self, instance):
+        # Get list of words that are in the bag
+        in_bag = [self._bow_lookup[token] for token in instance.get_feature('tokens') if token in self._bow_lookup]
+
+        # Chunk the sentence and in order to provide constant length inputs
+        chunks = []
+        for i in range(0, max(len(in_bag) - self._step_size, 1), self._step_size):
+            indices = in_bag[i:i + self._chunk_len]
+            vecs = []
+            # Create one hot vectors for each word
+            for index in indices:
+                v = np.zeros(self._bow_size)
+                v[index] = 1
+                vecs.append(v)
+            if len(vecs) < self._chunk_len:
+                for i in range(self._chunk_len - len(vecs)):
+                    vecs.append(np.zeros(self._bow_size))
+            chunks.append(vecs)
+
+        # Place lists in the instance
+        instance.add_feature(self.key, DenseVector(contents=chunks))
+        return instance
+
+    def train(self, instances):
+        # Count token occurrences
+        counter = Counter()
+        for inst in instances:
+            counter.update(inst.get_feature('tokens'))
+
+        self._bow_lookup = {}
+        n = 0
+        for token, count in counter.most_common():
+            if count >= self._min_occur:
+                self._bow_lookup[token] = n
+                n += 1
+            else:
+                break
+        self._bow_size = len(self._bow_lookup)
 
 
 class UniqueWordCount(Base):

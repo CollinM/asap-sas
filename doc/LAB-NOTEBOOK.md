@@ -224,3 +224,8 @@ Each pipeline generates a separate result in the [output folder](../output/exp-0
 
 Once again, relative simplicity reigns supreme. The best classifier was logistc regression using a bag of words with a minimum occurrence of 25. It's further worth acknowledging that this performed ~4% better than the random forest! It even performed slightly better than the Kaggle bag of words baseline (64.55%). This result indicates that with bag of words, the majority of the data is linearly separable. Of course, there's still the minority of the data that probably isn't.
 
+## RNN, LSTM
+
+[Installing Theano on AWS](http://markus.com/install-theano-on-aws/)
+
+Using [keras](https://github.com/fchollet/keras)
