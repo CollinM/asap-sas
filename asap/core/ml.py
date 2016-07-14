@@ -1,7 +1,7 @@
 from asap.core import Model
+from asap.metrics.nn import quadratic_weighted_kappa_loss
 
 import numpy as np
-import math
 from collections import Counter
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import RidgeClassifier, SGDClassifier

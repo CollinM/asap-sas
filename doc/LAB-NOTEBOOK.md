@@ -224,8 +224,100 @@ Each pipeline generates a separate result in the [output folder](../output/exp-0
 
 Once again, relative simplicity reigns supreme. The best classifier was logistc regression using a bag of words with a minimum occurrence of 25. It's further worth acknowledging that this performed ~4% better than the random forest! It even performed slightly better than the Kaggle bag of words baseline (64.55%). This result indicates that with bag of words, the majority of the data is linearly separable. Of course, there's still the minority of the data that probably isn't.
 
-## RNN, LSTM
+## Experimetn 5 - LSTM
 
-[Installing Theano on AWS](http://markus.com/install-theano-on-aws/)
+Uses the same data as "Experiment 1 - Baseline Redux".
 
-Using [keras](https://github.com/fchollet/keras)
+I setup [Theano](https://github.com/Theano/Theano) and [keras](https://github.com/fchollet/keras) on a g2.2xlarge AWS instance ([this](http://markus.com/install-theano-on-aws/) was very helpful in accomplishing this).
+
+### Single layer LSTM
+
+This experiment is an attempt to leverage near-state-of-the-art recurrent neural network architectures to perform text classification. However, LSTM's pose a variety of problems for text classfication. First, they're expensive to train, though this is largely miticaged by access to a CUDA GPU. The AWS g2.2xlarge instance provides a Nvidia 970 GTX with 4 GB of memory. While this is not the beefiest card available, it's more than sufficient for my experiments. Second, LSTMs, like all neural networks, expect constant length inputs, so the input data needs to be sliced up into chunks that can be fed to the neural network in batches. Third, neural networks usually accept simplified features, in this case, bag of words. Fourth, the input slicing problem applies to both the training and testing data. This means that a test record might be represnted by N chunks each with a different score/classification. How do we combine the scores into a single score? I don't have a good answer for this, but I do have a heuristic: Take the most common score for a given record, and in case of a tie choose the smaller score. I also tried taking the rounded average and the performance was similar. Fifth, keras provides a number of objective loss functions, but none of them are quadratic weighted kappa. So, I used "categorical cross-entropy" which seemd to be a safe default choice after doing some research. I attempted to code quadratic weighted kappa myself using Theano's symbolic math libraries (a requirement) and it proved to be frutratingly difficult. The code works, but the input that it receives is not well documented and I'm limited to Theano's tensor functions for the majority of the logic which makes the whole thing an exercise in hacking cleverness...
+
+For my first foray into LSTMs, I built a simple architecture consisting of a LSTM layer and a dense output layer. See `asap.core.ml.LSTM_Arch1` for more details. This model, combined with the bag of words features, provides 6 parameters to explore:
+1. Bag of words minimum count - minimum number of occurrences required for a word to be included in the bag
+2. Chunk length - the length of the BOW input chunks fed to the network
+3. Chunk step size - the number of words to increment between taking new chunks of a document (only operates on in-bag words)
+4. LSTM size - Number of outputs for the LSTM layer
+5. Batch size - Size of the training batches
+6. Epochs - Number of training epochs
+
+1 controls the size of the input vector and the size of the raw record inputs. 2 and 3 control the amount of data fed into the network for each record, as the network sees it, and the total quantity of data. 4 controls model complexity. 5 and 6 control under-/over-fitting and training speed. Suffice to say that I was building my intuition about these parameters and their good and bad values as I was performing experiments.
+
+Result files are similar to prior experience, except the pipelines/models are not pickled to due to greater complexity and the integration work required. Furthermore, the pickled models from prior experiments did not prove to be especially useful after the results were obtained. Because these models are much more expensive to train (20-30 minutes per experiment, instead of <2 minutes), I have run fewer of them and with greater parameter variation in order to explore more of the parameter space in a limited time. The following experiments were not necessarily performed in the order presented. Some were run in parallel.
+
+For the experiments in the following table, chunk length = 10, chunk step size = 5, LSTM size = 512.
+
+| Essay Set | BOW 10 (batch 64, epoch 35) | BOW 25 (batch 32, epoch 20) | BOW 50 (batch 32, epoch 20) |
+| --------: | --------------------------: | --------------------------: | --------------------------: |
+| 1   | 52.32% | 45.99% | 48.69% |
+| 2   | 41.02% | 39.44% | 40.66% |
+| 3   | 40.37% | 32.71% | 32.16% |
+| 4   | 42.12% | 30.62% | 38.01% |
+| 5   | 32.84% | 54.50% | 53.09% |
+| 6   | 55.38% | 50.70% | 52.39% |
+| 7   | 36.57% | 39.68% | 27.05% |
+| 8   | 36.64% | 32.24% | 28.66% |
+| 9   | 50.30% | 42.10% | 44.77% |
+| 10  | 49.41% | 49.31% | 54.26% |
+| Avg | 43.70% | 41.73% | 41.97% |
+
+Larger bag of words have a positive impact on performance, though they are slower to train.
+
+For the experiments in the following table, BOW min = 25, chunk = 10, LSTM size = 512, batch = 32.
+
+| Essay Set | chunk step size 3 (epoch 20) | chunk step size 8 (epoch 15) |
+| 1   | 55.68% | 47.31% |
+| 2   | 43.42% | 33.02% |
+| 3   | 30.22% | 24.18% |
+| 4   | 30.20% | 20.33% |
+| 5   | 48.77% | 43.60% |
+| 6   | 45.91% | 54.45% |
+| 7   | 37.51% | 31.35% |
+| 8   | 35.27% | 35.22% |
+| 9   | 39.46% | 52.56% |
+| 10  | 41.38% | 47.19% |
+| Avg | 40.78% | 38.92% |
+
+Greater step size made performance worse. This makes sense as greater step sizes means fewer chunks being fed into the network and less overlap between chunks; therefore, less overall data going through the network. Of course, 5 fewer epochs could have contributed as well, but the accuracy measure done at the end of every epoch generally shows that improvement in performance becomes smaller and smaller for every epoch past 15. Although, prior experiments suggest that more epochs improve performance on some essay sets.
+
+For the experiments in the following table, BOW min = 25, chunk size = 10, chunk step size = 5, batch = 32, epoch = 20.
+
+| Essay Set | LSTM size 256 | LSTM size 128 |
+| 1   | 50.72% | 52.06% |
+| 2   | 43.76% | 42.74% |
+| 3   | 32.73% | 31.21% |
+| 4   | 31.28% | 33.53% |
+| 5   | 52.00% | 53.47% |
+| 6   | 61.39% | 53.93% |
+| 7   | 38.72% | 40.02% |
+| 8   | 33.20% | 31.80% |
+| 9   | 49.60% | 49.22% |
+| 10  | 46.15% | 53.67% |
+| Avg | 43.95% | 44.16% |
+
+Overall, decreasing the number of outputs of the LSTM layer had a positive impact on performance: +4%. However, the difference between 256 and 128 outputs is essentially negligible. They perform very similar on most essay sets, and the disimilar sets are mostly trading performance increases and decreases.
+
+For the experiments in the following table, chunk step size = 1, LSTM size = 128, batch = 32.
+
+| Essay Set | BOW 25, chunk size 5, epoch 20 | BOW 10, chunk size 15, epoch 25 |
+| --------: | -----------------------------: | ------------------------------: |
+| 1   | 55.57% | 59.51% |
+| 2   | 38.42% | 40.67% |
+| 3   | 08.29% | 34.74% |
+| 4   | 28.42% | 35.45% |
+| 5   | 38.93% | 53.64% |
+| 6   | 44.89% | 55.83% |
+| 7   | 39.33% | 
+| 8   | 20.90% | 
+| 9   | 41.15% | 
+| 10  | 41.30% | 
+| Avg | 35.72% | 
+
+50+ seconds per epoch, every model takes ~20 minutes...
+
+Thoughts:
+- scoring heuristic is not great... the network may score some chunks low, because they look like bad answers, and then score a few chunks high, because they look like good answers, and the bad may outweigh the good...
+- Word embeddings would provie much richer input data, though the data set may not be large enough to generate a good embedding, especially if it's partitioned by essay set.
+- Different essay sets require models with different parameters. One size does _not_ fit all here.
+- Additional research on how others are using recurrent neural networks for text classification led me to the techniques of stacked LSTMs, character-wise RNNs, and convolutional LSTMs. All of these approaches have their pros and cons (all are more expensive to train), but they are all closer to the state of the art in RNN text classification. Unfortunately, I did not have time to explore these techniques and architectures.

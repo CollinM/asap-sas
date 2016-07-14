@@ -14,12 +14,15 @@ def parse_args():
     ap.add_argument("input_path")
     ap.add_argument("output_path")
     ap.add_argument("bow_min_occur", type=int)
-    ap.add_argument("batch_size", type=int)
+    ap.add_argument("chunk_length", type=int)
+    ap.add_argument("chunk_step_size", type=int)
+    ap.add_argument("lstm_size", type=int)
+    ap.add_argument("batch_size", default=32, type=int)
     ap.add_argument("epochs", type=int)
     return ap.parse_args()
 
 
-def make_pipeline(bow_min, batch_size, epochs):
+def make_pipeline(bow_min, chunk_len, chunk_step_size, lstm_size, batch_size, epochs):
     pipe = Pipeline()
     # Preprocessing
     pipe.add_phase(PunctuationStripper())
@@ -27,9 +30,9 @@ def make_pipeline(bow_min, batch_size, epochs):
     pipe.add_phase(LowerCaser())
     # Analysis
     pipe.add_phase(Tokenizer())
-    pipe.add_phase(NN_BagOfWords(bow_min))
+    pipe.add_phase(NN_BagOfWords(bow_min, chunk_len, chunk_step_size))
     # ML
-    pipe.add_phase(LSTM_Arch1(batch_size=batch_size, num_epochs=epochs, target="score1", features=["nn-bow"]))
+    pipe.add_phase(LSTM_Arch1(lstm_output_size=lstm_size, batch_size=batch_size, num_epochs=epochs, target="score1", features=["nn-bow"]))
 
     return pipe
 
@@ -56,7 +59,7 @@ if __name__ == "__main__":
         print("Done")
 
         print("Creating pipeline...", end='')
-        pipe = make_pipeline(args.bow_min_occur, args.batch_size, args.epochs)
+        pipe = make_pipeline(args.bow_min_occur, args.chunk_length, args.chunk_step_size, args.lstm_size, args.batch_size, args.epochs)
         print("Done")
 
         runner = PipelineRunner(pipe, test, 'score1', 'prediction', train, output_dir, evaluate=True, save=False)
