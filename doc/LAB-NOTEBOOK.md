@@ -269,6 +269,7 @@ Larger bag of words have a positive impact on performance, though they are slowe
 For the experiments in the following table, BOW min = 25, chunk length = 10, LSTM size = 512, batch = 32.
 
 | Essay Set | chunk step size 3 (epoch 20) | chunk step size 8 (epoch 15) |
+| --------: | ---------------------------: | ---------------------------: |
 | 1   | 55.68% | 47.31% |
 | 2   | 43.42% | 33.02% |
 | 3   | 30.22% | 24.18% |
@@ -286,6 +287,7 @@ Greater step size made performance worse. This makes sense as greater step sizes
 For the experiments in the following table, BOW min = 25, chunk size = 10, chunk step size = 5, batch = 32, epoch = 20.
 
 | Essay Set | LSTM size 256 | LSTM size 128 |
+| --------: | ------------: | ------------: |
 | 1   | 50.72% | 52.06% |
 | 2   | 43.76% | 42.74% |
 | 3   | 32.73% | 31.21% |
