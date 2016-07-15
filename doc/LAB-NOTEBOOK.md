@@ -244,7 +244,9 @@ For my first foray into LSTMs, I built a simple architecture consisting of a LST
 
 1 controls the size of the input vector and the size of the raw record inputs. 2 and 3 control the amount of data fed into the network for each record, as the network sees it, and the total quantity of data. 4 controls model complexity. 5 and 6 control under-/over-fitting and training speed. Suffice to say that I was building my intuition about these parameters and their good and bad values as I was performing experiments.
 
-Result files are similar to prior experience, except the pipelines/models are not pickled to due to greater complexity and the integration work required. Furthermore, the pickled models from prior experiments did not prove to be especially useful after the results were obtained. Because these models are much more expensive to train (20-30 minutes per experiment, instead of <2 minutes), I have run fewer of them and with greater parameter variation in order to explore more of the parameter space in a limited time. The following experiments were not necessarily performed in the order presented. Some were run in parallel.
+Chunking the records is accomplished by taking the bag of words representation of the record (N words = N 1-hot vectors) and make slice copies with the size given in "chunk length/size". After each slice is taken, the starting index of the slice is incremented by "chunk step size", then another sliced is taken, until there is no data remaining. Slices that are too short, are padded with all-zero vectors.
+
+Result files are similar to prior experiments, except the pipelines/models are not pickled due to greater complexity and the integration work that would be required. Furthermore, the pickled models from prior experiments did not prove to be especially useful after the results were obtained. Because these models are much more expensive to train (20-30+ minutes per experiment, instead of <2 minutes), I have run fewer of them and with greater parameter variation in order to explore more of the parameter space in a limited time. The following experiments were not necessarily performed in the order presented, some were run in parallel.
 
 For the experiments in the following table, chunk length = 10, chunk step size = 5, LSTM size = 512.
 
@@ -262,9 +264,9 @@ For the experiments in the following table, chunk length = 10, chunk step size =
 | 10  | 49.41% | 49.31% | 54.26% |
 | Avg | 43.70% | 41.73% | 41.97% |
 
-Larger bag of words have a positive impact on performance, though they are slower to train.
+Larger bag of words have a positive impact on performance, though they are slower to train. Performance is quite a bit lower than prior experiments.
 
-For the experiments in the following table, BOW min = 25, chunk = 10, LSTM size = 512, batch = 32.
+For the experiments in the following table, BOW min = 25, chunk length = 10, LSTM size = 512, batch = 32.
 
 | Essay Set | chunk step size 3 (epoch 20) | chunk step size 8 (epoch 15) |
 | 1   | 55.68% | 47.31% |
@@ -279,7 +281,7 @@ For the experiments in the following table, BOW min = 25, chunk = 10, LSTM size 
 | 10  | 41.38% | 47.19% |
 | Avg | 40.78% | 38.92% |
 
-Greater step size made performance worse. This makes sense as greater step sizes means fewer chunks being fed into the network and less overlap between chunks; therefore, less overall data going through the network. Of course, 5 fewer epochs could have contributed as well, but the accuracy measure done at the end of every epoch generally shows that improvement in performance becomes smaller and smaller for every epoch past 15. Although, prior experiments suggest that more epochs improve performance on some essay sets.
+Greater step size made performance worse. This makes sense as greater step sizes means fewer chunks are being fed into the network with less overlap between chunks; therefore, less overall data going through the network and less likely to observe the same in-context examples in the test set. Of course, 5 fewer epochs could have contributed as well, but the accuracy measure done at the end of every epoch generally shows that improvement in performance becomes smaller and smaller for every epoch past 15. Although, prior experiments suggest that more epochs improve performance on some essay sets.
 
 For the experiments in the following table, BOW min = 25, chunk size = 10, chunk step size = 5, batch = 32, epoch = 20.
 
@@ -296,7 +298,7 @@ For the experiments in the following table, BOW min = 25, chunk size = 10, chunk
 | 10  | 46.15% | 53.67% |
 | Avg | 43.95% | 44.16% |
 
-Overall, decreasing the number of outputs of the LSTM layer had a positive impact on performance: +4%. However, the difference between 256 and 128 outputs is essentially negligible. They perform very similar on most essay sets, and the disimilar sets are mostly trading performance increases and decreases.
+Overall, decreasing the number of outputs of the LSTM layer had a positive impact on performance: +4%. However, the difference between 256 and 128 outputs is essentially negligible. They perform very similar on most essay sets, and the disimilar sets are mostly trading performance increases and decreases. All things considered, a simpler model is better.
 
 For the experiments in the following table, chunk step size = 1, LSTM size = 128, batch = 32.
 
@@ -308,16 +310,22 @@ For the experiments in the following table, chunk step size = 1, LSTM size = 128
 | 4   | 28.42% | 35.45% |
 | 5   | 38.93% | 53.64% |
 | 6   | 44.89% | 55.83% |
-| 7   | 39.33% | 
-| 8   | 20.90% | 
-| 9   | 41.15% | 
-| 10  | 41.30% | 
-| Avg | 35.72% | 
+| 7   | 39.33% | 35.58% |
+| 8   | 20.90% | ...    |
+| 9   | 41.15% | ...    |
+| 10  | 41.30% | ...    |
+| Avg | 35.72% | 45.06% |
 
-50+ seconds per epoch, every model takes ~20 minutes...
+I terminated the model training on the last three essay sets early due to the expected poor performance (compared to prior experiments). Each epoch was taking 50+ seconds, and thus every model was taking ~20 minutes. This time adds up fast.
 
-Thoughts:
-- scoring heuristic is not great... the network may score some chunks low, because they look like bad answers, and then score a few chunks high, because they look like good answers, and the bad may outweigh the good...
-- Word embeddings would provie much richer input data, though the data set may not be large enough to generate a good embedding, especially if it's partitioned by essay set.
-- Different essay sets require models with different parameters. One size does _not_ fit all here.
-- Additional research on how others are using recurrent neural networks for text classification led me to the techniques of stacked LSTMs, character-wise RNNs, and convolutional LSTMs. All of these approaches have their pros and cons (all are more expensive to train), but they are all closer to the state of the art in RNN text classification. Unfortunately, I did not have time to explore these techniques and architectures.
+Anyways, the early termination model was the best so far, but not by much. Increasing the size of the bag of words in combination with increasing the input chunk size and decreasing the step size (for maximum overlap) gave a good jump in performance compared to the other set of parameters. Longer training time didn't hurt either. Would twice as many epochs make the performance even better?
+
+### Other Thoughts on LSTMs
+
+My scoring heuristic is not the best. It counts on the majority of the record being scored at the correct score, whereas the majority of the record may score lower, but a single sequence triggers the right memories in the LSTM to get the higher, correct score. This is an especially bad problem on essay sets that share a lot of the same general words, where a good answer and a bad one are not that far apart purely in terms of words. Of course, the opposite scorign situation exists too, but is probably less likely. Either way, a more clever score combining method is needed... Maybe root sum of squares?
+
+Keras provided a very easy method for leveraging word embeddings in the input layer. This would almost certainly provide much richer input data, but the data set may not be large enough to generate a good embedding (especially if it's partitioned by essay set). Also, any unaccounted for mispellings would be problematic as an input.
+
+Different essay sets almost certainly require models with different parameters. One size does _not_ fit all here. Some models produce relatively high scores on a few essay sets and poor scores on all the others and vice versa. Perhaps the questions could be categorized by the kind of answer expected and then specific modelling techniques could be applied depending on this criteria.
+
+In the process of getting LSTMs setup and traiined, I did some additional research on how others are using recurrent neural networks for text classification. This led me to the techniques of stacked LSTMs, character-wise RNNs, and convolutional LSTMs. All of these approaches have their pros and cons (all are more expensive to train), but they are all closer to the state of the art in RNN text classification. Unfortunately, I did not have time to explore these techniques and architectures.
